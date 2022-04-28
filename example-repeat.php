@@ -6,7 +6,7 @@ require_once "class.writeexcel_workbook.inc.php";
 require_once "class.writeexcel_worksheet.inc.php";
 
 $fname = tempnam("/tmp", "repeat.xls");
-$workbook = &new writeexcel_workbook($fname);
+$workbook = new writeexcel_workbook($fname);
 $worksheet = &$workbook->addworksheet();
 
 $worksheet->repeat_rows(0, 1);
