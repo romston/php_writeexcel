@@ -96,7 +96,7 @@ examples. Please note that you have to assign variables by reference
 
 Reporting bugs
 --------------
-If you've found a bug, please send a bug report to jonny@nurfuerspam.de.
+If you've found a bug, please send a bug report to github issues.
 Please include "php_writeexcel" in the subject so that I can search for bug
 reports by searching for that string.
 Please note that my email address has changed. Several mails have been lost,
