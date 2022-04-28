@@ -63,7 +63,7 @@ class writeexcel_format {
     /*
      * Constructor
      */
-    function writeexcel_format() {
+    function __construct() {
         $_=func_get_args();
 
         $this->_xf_index       = (sizeof($_)>0) ? array_shift($_) : 0;
@@ -281,7 +281,7 @@ class writeexcel_format {
         $bCharSet   = $this->_font_charset;
         $rgch       = $this->_font;
 
-        $cch        = strlen($rgch);
+        $cch        = strlen((string)$rgch);
         $record     = 0x31;
         $length     = 0x0F + $cch;
         $reserved   = 0x00;

@@ -57,9 +57,9 @@ class writeexcel_workbook extends writeexcel_biffwriter {
 #
 # Constructor. Creates a new Workbook object from a BIFFwriter object.
 #
-function writeexcel_workbook($filename) {
+public function __construct($filename) {
 
-    $this->writeexcel_biffwriter();
+    parent::__construct();
    
     $tmp_format  = new writeexcel_format();
     $byte_order  = $this->_byte_order;
@@ -154,7 +154,7 @@ function &addworksheet($name="") {
         trigger_error("Sheetname $name must be <= 31 chars", E_USER_ERROR);
     }
 
-    $index     = sizeof($this->_worksheets);
+    $index     = $this->_worksheets !== null ? count($this->_worksheets) : 0;
     $sheetname = $this->_sheetname;
 
     if ($name == "") {
@@ -162,9 +162,11 @@ function &addworksheet($name="") {
     }
 
     # Check that the worksheet name doesn't already exist: a fatal Excel error.
-    foreach ($this->_worksheets as $tmp) {
-        if ($name == $tmp->get_name()) {
-            trigger_error("Worksheet '$name' already exists", E_USER_ERROR);
+    if ($this->_worksheets !== null) {
+        foreach ($this->_worksheets as $tmp) {
+            if ($name == $tmp->get_name()) {
+                trigger_error("Worksheet '$name' already exists", E_USER_ERROR);
+            }
         }
     }
 
@@ -544,12 +546,12 @@ function _calc_sheet_offsets() {
     $offset  = $this->_datasize;
 
     foreach ($this->_worksheets as $sheet) {
-        $offset += $BOF + strlen($sheet->_name);
+        $offset += $BOF + strlen((string)$sheet->_name);
     }
 
     $offset += $EOF;
 
-    for ($c=0;$c<sizeof($this->_worksheets);$c++) {
+    for ($c=0, $cMax = count($this->_worksheets); $c< $cMax; $c++) {
         $sheet=&$this->_worksheets[$c];
         $sheet->_offset = $offset;
         $offset += $sheet->_datasize;
@@ -619,7 +621,7 @@ function _store_all_num_formats() {
     # built-in format type and if the FORMAT string hasn't already been used.
     #
 
-    for ($c=0;$c<sizeof($this->_formats);$c++) {
+    for ($c=0, $cMax = count($this->_formats); $c< $cMax; $c++) {
         $format=&$this->_formats[$c];
 
         $num_format = $format->_num_format;
@@ -628,8 +630,8 @@ function _store_all_num_formats() {
         # Also check for a string of zeros, which is a valid format string
         # but would evaluate to zero.
         #
-        if (!preg_match('/^0+\d/', $num_format)) {
-            if (preg_match('/^\d+$/', $num_format)) {
+        if (!preg_match('/^0+\d/', (string)$num_format)) {
+            if (preg_match('/^\d+$/', (string)$num_format)) {
                 # built-in
                 continue;
             }
@@ -642,7 +644,7 @@ function _store_all_num_formats() {
             # Add a new FORMAT
             $num_formats[$num_format] = $index;
             $format->_num_format    = $index;
-            array_push($num_formats_list, $num_format);
+            $num_formats_list[] = $num_format;
             $index++;
         }
     }
@@ -828,12 +830,12 @@ function _store_window1() {
 #
 function _store_boundsheet($sheetname, $offset) {
     $record    = 0x0085;               # Record identifier
-    $length    = 0x07 + strlen($sheetname); # Number of bytes to follow
+    $length    = 0x07 + strlen((string)$sheetname); # Number of bytes to follow
 
     //$sheetname = $_[0];                # Worksheet name
     //$offset    = $_[1];                # Location of worksheet BOF
     $grbit     = 0x0000;               # Sheet identifier
-    $cch       = strlen($sheetname);   # Length of sheet name
+    $cch       = strlen((string)$sheetname);   # Length of sheet name
 
     $header    = pack("vv",  $record, $length);
     $data      = pack("VvC", $offset, $grbit, $cch);
@@ -869,11 +871,11 @@ function _store_style() {
 #
 function _store_num_format($num_format, $index) {
     $record    = 0x041E;                 # Record identifier
-    $length    = 0x03 + strlen($num_format);   # Number of bytes to follow
+    $length    = 0x03 + strlen($num_format !== null ? $num_format : '');   # Number of bytes to follow
 
     $format    = $num_format;                  # Custom format string
     $ifmt      = $index;                  # Format index code
-    $cch       = strlen($format);        # Length of format string
+    $cch       = strlen((string)$format);        # Length of format string
 
     $header    = pack("vv", $record, $length);
     $data      = pack("vC", $ifmt, $cch);
@@ -1115,13 +1117,14 @@ function _store_palette() {
     $aref            = &$this->_palette;
 
     $record          = 0x0092;                  # Record identifier
-    $length          = 2 + 4 * sizeof($aref);   # Number of bytes to follow
-    $ccv             =         sizeof($aref);   # Number of RGB values to follow
+    $length          = 2 + 4 * count($aref);   # Number of bytes to follow
+    $ccv             =         count($aref);   # Number of RGB values to follow
     //$data;                                      # The RGB data
-
+    
+    $data = '';
     # Pack the RGB data
     foreach($aref as $dat) {
-        $data .= call_user_func_array('pack', array_merge(array("CCCC"), $dat));
+        $data .= pack("CCCC", $dat[0], $dat[1], $dat[2], $dat[3]);
     }
 
     $header = pack("vvv",  $record, $length, $ccv);

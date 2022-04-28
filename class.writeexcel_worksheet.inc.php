@@ -106,10 +106,10 @@ class writeexcel_worksheet extends writeexcel_biffwriter {
     /*
      * Constructor. Creates a new Worksheet object from a BIFFwriter object
      */
-    function writeexcel_worksheet($name, $index, &$activesheet, &$firstsheet,
+    function __construct($name, $index, &$activesheet, &$firstsheet,
                                   &$url_format, &$parser, $tempdir) {
 
-        $this->writeexcel_biffwriter();
+        parent::__construct();
 
         $rowmax                   = 65536; // 16384 in Excel 5
         $colmax                   = 256;
@@ -202,7 +202,7 @@ class writeexcel_worksheet extends writeexcel_biffwriter {
 function _initialize() {
 
     # Open tmp file for storing Worksheet data.
-    $this->_tmpfilename=tempnam($this->_tempdir, "php_writeexcel");
+    $this->_tmpfilename=tempnam((string)$this->_tempdir, "php_writeexcel");
     $fh=fopen($this->_tmpfilename, "w+b");
 
     if ($fh) {
@@ -283,7 +283,7 @@ function _initialize() {
         $this->_store_window2();
         $this->_store_zoom();
 
-        if (sizeof($this->_panes)>0) {
+        if ($this->_panes !== null && count($this->_panes)>0) {
             $this->_store_panes($this->_panes);
         }
 
@@ -422,7 +422,7 @@ function set_column() {
         $_ = $this->_substitute_cellref($_);
     }
 
-    array_push($this->_colinfo, $_);
+    $this->_colinfo[] = $_;
 
     # Store the col sizes for use when calculating image vertices taking
     # hidden columns into account. Also store the column formats.
@@ -1972,9 +1972,9 @@ function _store_colinfo($_) {
     $coldx       *= 256;            # Convert to units of 1/256 of a char
 
     //$ixfe;                       # XF index
-    $grbit    = $_[4] || 0;      # Option flags
+    $grbit    = (isset($_[4]) && $_[4]) ? $_[4] : 0;      # Option flags
     $reserved = 0x00;            # Reserved
-    $format   = $_[3];           # Format object
+    $format   = isset($_[3]) ? $_[3] : null;           # Format object
 
     # Check for a format object
     if (isset($_[3])) {
@@ -2001,15 +2001,15 @@ function _store_selection($_) {
     $length   = 0x000F;                  # Number of bytes to follow
 
     $pnn      = $this->_active_pane;     # Pane position
-    $rwAct    = $_[0];                   # Active row
-    $colAct   = $_[1];                   # Active column
+    $rwAct    = isset($_[0]) ? $_[0] : null;                   # Active row
+    $colAct   = isset($_[1]) ? $_[1] : null;                   # Active column
     $irefAct  = 0;                       # Active cell ref
     $cref     = 1;                       # Number of refs
 
-    $rwFirst  = $_[0];                   # First row in reference
-    $colFirst = $_[1];                   # First col in reference
-    $rwLast   = $_[2] ? $_[2] : $rwFirst;       # Last  row in reference
-    $colLast  = $_[3] ? $_[3] : $colFirst;      # Last  col in reference
+    $rwFirst  = isset($_[0]) ? $_[0] : null;                   # First row in reference
+    $colFirst = isset($_[1]) ? $_[1] : null;                   # First col in reference
+    $rwLast   = (isset($_[2]) && $_[2]) ? $_[2] : $rwFirst;       # Last  row in reference
+    $colLast  = (isset($_[3]) && $_[3]) ? $_[3] : $colFirst;      # Last  col in reference
 
     # Swap last row/col for first row/col as necessary
     if ($rwFirst > $rwLast) {
@@ -2235,7 +2235,7 @@ function _store_panes($_) {
         $record  = 0x0014;           // Record identifier
 
         $str     = $this->_header;   // header string
-        $cch     = strlen($str);     // Length of header string
+        $cch     = $str !== null ? strlen($str) : 0;     // Length of header string
         $length  = 1 + $cch;         // Bytes to follow
 
         $header  = pack("vv",  $record, $length);
@@ -2251,7 +2251,7 @@ function _store_panes($_) {
         $record  = 0x0015;           // Record identifier
 
         $str     = $this->_footer;   // Footer string
-        $cch     = strlen($str);     // Length of footer string
+        $cch     = $str !== null ? strlen($str) : 0;     // Length of footer string
         $length  = 1 + $cch;         // Bytes to follow
 
         $header  = pack("vv",  $record, $length);
@@ -2484,7 +2484,7 @@ function merge_cells() {
      */
     function _store_hbreak() {
         // Return if the user hasn't specified pagebreaks
-        if(sizeof($this->_hbreaks)==0) {
+        if($this->_hbreaks === null || count($this->_hbreaks)==0) {
             return;
         }
 
@@ -2511,7 +2511,7 @@ function merge_cells() {
      */
     function _store_vbreak() {
         // Return if the user hasn't specified pagebreaks
-        if(sizeof($this->_vbreaks)==0) {
+        if($this->_vbreaks === null || count($this->_vbreaks)==0) {
             return;
         }
 
@@ -2519,7 +2519,7 @@ function merge_cells() {
         $breaks  = $this->_sort_pagebreaks($this->_vbreaks);
 
         $record  = 0x001a;            // Record identifier
-        $cbrk    = sizeof($breaks);   // Number of page breaks
+        $cbrk    = count($breaks);   // Number of page breaks
         $length  = ($cbrk + 1) * 2;   // Bytes to follow
 
         $header  = pack("vv",  $record, $length);

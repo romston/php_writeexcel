@@ -42,7 +42,7 @@ class writeexcel_olewriter {
     /*
      * Constructor
      */
-    function writeexcel_olewriter($filename) {
+    function __construct($filename) {
 
         $this->_OLEfilename  = $filename;
         $this->_filehandle   = false;
@@ -183,7 +183,7 @@ class writeexcel_olewriter {
      * Write BIFF data to OLE file.
      */
     function write($data) {
-        fputs($this->_filehandle, $data);
+        fwrite($this->_filehandle, $data);
     }
 
     /*
@@ -213,25 +213,25 @@ class writeexcel_olewriter {
         $unknown7        = pack("VVV",  0x00, -2 ,0x00);
         $unused          = pack("V",    -1);
 
-        fputs($this->_filehandle, $id);
-        fputs($this->_filehandle, $unknown1);
-        fputs($this->_filehandle, $unknown2);
-        fputs($this->_filehandle, $unknown3);
-        fputs($this->_filehandle, $unknown4);
-        fputs($this->_filehandle, $unknown5);
-        fputs($this->_filehandle, $num_bbd_blocks);
-        fputs($this->_filehandle, $root_startblock);
-        fputs($this->_filehandle, $unknown6);
-        fputs($this->_filehandle, $sbd_startblock);
-        fputs($this->_filehandle, $unknown7);
+        fwrite($this->_filehandle, $id);
+        fwrite($this->_filehandle, $unknown1);
+        fwrite($this->_filehandle, $unknown2);
+        fwrite($this->_filehandle, $unknown3);
+        fwrite($this->_filehandle, $unknown4);
+        fwrite($this->_filehandle, $unknown5);
+        fwrite($this->_filehandle, $num_bbd_blocks);
+        fwrite($this->_filehandle, $root_startblock);
+        fwrite($this->_filehandle, $unknown6);
+        fwrite($this->_filehandle, $sbd_startblock);
+        fwrite($this->_filehandle, $unknown7);
 
         for ($c=1;$c<=$num_lists;$c++) {
             $root_start++;
-            fputs($this->_filehandle, pack("V", $root_start));
+            fwrite($this->_filehandle, pack("V", $root_start));
         }
 
         for ($c=$num_lists;$c<=108;$c++) {
-            fputs($this->_filehandle, $unused);
+            fwrite($this->_filehandle, $unused);
         }
     }
 
@@ -249,18 +249,18 @@ class writeexcel_olewriter {
         $unused       = pack("V", -1);
 
         for ($i=1;$i<=($num_blocks-1);$i++) {
-            fputs($this->_filehandle, pack("V", $i));
+            fwrite($this->_filehandle, pack("V", $i));
         }
 
-        fputs($this->_filehandle, $end_of_chain);
-        fputs($this->_filehandle, $end_of_chain);
+        fwrite($this->_filehandle, $end_of_chain);
+        fwrite($this->_filehandle, $end_of_chain);
 
         for ($c=1;$c<=$num_lists;$c++) {
-            fputs($this->_filehandle, $marker);
+            fwrite($this->_filehandle, $marker);
         }
 
         for ($c=$used_blocks;$c<=$total_blocks;$c++) {
-            fputs($this->_filehandle, $unused);
+            fwrite($this->_filehandle, $unused);
         }
     }
 
@@ -290,7 +290,7 @@ class writeexcel_olewriter {
             // Simulate a Unicode string
             $chars=preg_split("''", $name, -1, PREG_SPLIT_NO_EMPTY);
             foreach ($chars as $char) {
-                array_push($names, ord($char));
+                $names[] = ord($char);
             }
             $length = strlen($name) * 2;
         }
@@ -313,21 +313,21 @@ class writeexcel_olewriter {
         $pps_sb          = pack("V",  $start);    //0x74
         $pps_size        = pack("V",  $size);     //0x78
 
-        fputs($this->_filehandle, $rawname);
-        fputs($this->_filehandle, str_repeat($zero, (64-$length)));
-        fputs($this->_filehandle, $pps_sizeofname);
-        fputs($this->_filehandle, $pps_type);
-        fputs($this->_filehandle, $pps_prev);
-        fputs($this->_filehandle, $pps_next);
-        fputs($this->_filehandle, $pps_dir);
-        fputs($this->_filehandle, str_repeat($unknown1, 5));
-        fputs($this->_filehandle, $pps_ts1s);
-        fputs($this->_filehandle, $pps_ts1d);
-        fputs($this->_filehandle, $pps_ts2d);
-        fputs($this->_filehandle, $pps_ts2d);
-        fputs($this->_filehandle, $pps_sb);
-        fputs($this->_filehandle, $pps_size);
-        fputs($this->_filehandle, $unknown1);
+        fwrite($this->_filehandle, $rawname);
+        fwrite($this->_filehandle, str_repeat($zero, (64-$length)));
+        fwrite($this->_filehandle, $pps_sizeofname);
+        fwrite($this->_filehandle, $pps_type);
+        fwrite($this->_filehandle, $pps_prev);
+        fwrite($this->_filehandle, $pps_next);
+        fwrite($this->_filehandle, $pps_dir);
+        fwrite($this->_filehandle, str_repeat($unknown1, 5));
+        fwrite($this->_filehandle, $pps_ts1s);
+        fwrite($this->_filehandle, $pps_ts1d);
+        fwrite($this->_filehandle, $pps_ts2d);
+        fwrite($this->_filehandle, $pps_ts2d);
+        fwrite($this->_filehandle, $pps_sb);
+        fwrite($this->_filehandle, $pps_size);
+        fwrite($this->_filehandle, $unknown1);
     }
 
     /*
@@ -344,7 +344,7 @@ class writeexcel_olewriter {
 
         if ($biffsize % $min_size != 0) {
             $padding  = $min_size - ($biffsize % $min_size);
-            fputs($this->_filehandle, str_repeat("\0", $padding));
+            fwrite($this->_filehandle, str_repeat("\0", $padding));
         }
     }
 
